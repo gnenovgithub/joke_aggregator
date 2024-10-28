@@ -36,6 +36,7 @@ class JokeApiProvider implements JokeProviderInterface
             ]);
             $data = json_decode($response->getBody(), true);
             if(empty($data)){
+                Log::error('The response body is empty!');
                 return [];
             }
 
@@ -45,6 +46,8 @@ class JokeApiProvider implements JokeProviderInterface
                 shuffle($range);
                 $numberOfJokes = $this->getJokesLimit() > $numberOfJokes ? $numberOfJokes : $numberOfJokes - 1;
                 return array_slice($range, 0, $numberOfJokes);
+            }else{
+                Log::warning('We were not able to find jokes for the following language: ' . env('JOKE_API_LANGUAGE'));
             }
         } catch (Exception $e) {
             Log::error('Error fetching jokes from JokeApiProvider: ' . $e->getMessage());
@@ -90,7 +93,7 @@ class JokeApiProvider implements JokeProviderInterface
     public function getJokes(int $numberOfJokes): array
     {
         /*
-         * We can't take more than 1 joke at a time, so we need to loop :(
+         * We can't get more than 1 joke at a time, so we need to loop :(
          */
         $jokes = array();
         foreach ($this->getRandomIds($numberOfJokes) as $jokeId) {
