@@ -1,64 +1,82 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Joke Aggregator Library
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+The Joke Aggregator Library is a PHP package designed for aggregating science, tech, and programming jokes from multiple APIs. The library provides a unified interface for fetching jokes from multiple sources, allowing developers to easily integrate random jokes into their applications with minimal configuration. It also supports logging and error handling to ensure a smooth developer experience.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Aggregates jokes from multiple sources.
+- Configurable joke providers (choose one or multiple).
+- Supports PSR-3 logging for API requests and responses.
+- Handles API authentication and common errors.
+- Tolerates provider errors (e.g., rate limits), aiming to return the maximum number of jokes requested.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Installation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+You can install the library via Composer:
 
-## Learning Laravel
+```bash
+composer require gnenovgithub/joke-aggregator
+```
+#### Note: This package is not yet published on Packagist.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Requirements
+- PHP 7.4 or higher
+- Composer
+- PSR-3 compatible logger (e.g., Stack)
+- Guzzle HTTP client (for making API requests)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 1500 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Usage
+### 1. Set Up API Credentials
 
-## Laravel Sponsors
+Obtain an API key from RapidAPI for each joke provider you intend to use. This library currently supports the following joke APIs:
+- World of Jokes
+- JokeAPI
+- Jokester
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+Set these keys in your .env file:
+```env
+WORLD_OF_JOKES_API_KEY=your_world_of_jokes_api_key
+# Language preference for jokes
+JOKE_API_LANGUAGE=en 
+# Max jokes to fetch per provider
+WORLD_OF_JOKES_LIMIT=0 # You can exclude provider by setting the limit to 0, but this will log a message
+JOKE_API_JOKES_LIMIT=10 
+JOKESTER_JOKES_LIMIT=1
+```
+### 2. Initialize the Joke Aggregator
+The following example shows how to initialize the library, configure joke providers, and retrieve random jokes.
+```
+$client = new Client();
+$providers = [
+    new WorldOfJokesProvider($client),
+    new JokeApiProvider($client),
+    new JokesterProvider($client)
+];
 
-### Premium Partners
+$aggregator =  new JokeAggregator($providers, Log::channel('stack'));
+$jokes = $aggregator->getJokes(5);
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+if(!empty($jokes['error'])){
+    return response($jokes['error'], 503);
+}
+return response()->json($jokes);
+```
+## Error Handling
+- Authentication Errors: If authentication fails, the library will log the issue and return an error message.
+- API Rate Limiting and Provider Errors: The library is tolerant to rate limits and other API errors. It will attempt to return as many jokes as possible within the specified limit, even if one or more providers fail.
+## Logging
+The library uses a PSR-3 compatible logger to log all API requests and responses. By default, any PSR-3 compliant logger can be passed to the aggregator, which helps in debugging and monitoring API usage.
+## Testing
+The library includes unit tests for each joke provider and the aggregator. To run tests, use the following command. After you have ```cd``` to your root directory of the app:
 
+```bash
+php artisan test tests/Unit
+```
 ## Contributing
+Contributions are welcome! To contribute:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. Fork the repository.
+2. Create a feature branch (```git checkout -b your_feature_branch```).
+3. Commit your changes (```git commit -m 'Add some feature'```).
+4. Push to the branch (```git push origin your_feature_branch```).
+5. Open a Pull Request.
