@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\JokeAggregator;
 //use App\Services\WorldOfJokesProvider;
 use App\Services\JokeApiProvider;
+use App\Services\JokesterProvider;
 use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -22,7 +23,8 @@ class AppServiceProvider extends ServiceProvider
             $client = new Client();
             $providers = [
 //                new WorldOfJokesProvider($client),
-                new JokeApiProvider($client)
+                new JokeApiProvider($client),
+                new JokesterProvider($client)
             ];
 
             return new JokeAggregator($providers, Log::channel('stack'));
